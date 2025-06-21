@@ -310,9 +310,12 @@ elif st.session_state.step == 'end':
             feedback.append("Your responses showed strong confidence and positivity.")
         if tech_mention_avg > 1:
             feedback.append("You effectively referenced your technical skills.")
-        if len(st.session_state.answers) >= MIN_QUESTIONS:
-            feedback.append(f"You provided comprehensive answers to all {len(st.session_state.answers)} questions.")
-        
+        if len(st.session_state.answers) >= MAX_QUESTIONS:
+              st.session_state.completed = True
+        elif st.session_state.q_index >= len(st.session_state.base_questions) + len(st.session_state.followup_questions):
+              # No more questions available
+              st.session_state.completed = True
+   
         if feedback:
             st.info("💡 " + " ".join(feedback))
     
