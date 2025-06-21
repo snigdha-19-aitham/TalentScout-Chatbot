@@ -86,35 +86,15 @@ def analyze_answer(answer: str) -> dict:
 
 def generate_tech_questions(tech_stack: str, role: str, experience: str) -> list:
     """Generate adaptive technical questions based on role and experience level"""
-    prompt = f"""
-Generate technical screening questions for a {experience}-level {role} candidate with these skills: {tech_stack}
+    prompt = question_generation_prompt(tech_stack)
 
-Requirements:
-1. Generate 3-5 questions total
-2. Include at least one question per major technology
-3. Vary question types:
-   - Practical implementation
-   - Problem-solving scenarios
-   - Technology comparisons
-4. Adjust difficulty based on experience level:
-   - Junior: Focus on fundamentals
-   - Mid-level: Include optimization questions
-   - Senior: Include architectural decisions
-5. Format as a bulleted list without numbering
-
-Example Questions:
-- How would you implement [feature] using [technology]?
-- Describe your approach to [common challenge] in [technology]
-- Compare [technology A] and [technology B] for [use case]
-
-Generated Questions:
-"""
     try:
         response = ask_llm(prompt)
+        st.write("💬 LLM Response:", response)  # Debug line
         questions = [q.strip() for q in response.split('\n') if q.strip() and '?' in q]
         return questions[:MAX_QUESTIONS]
-    except Exception:
-        # Fallback questions
+    except Exception as e:
+        st.error(f"❌ LLM failed: {e}")
         primary_tech = tech_stack.split(',')[0].strip()
         return [
             f"Describe your experience with {primary_tech} in {role} projects",
