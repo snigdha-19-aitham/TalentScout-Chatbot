@@ -4,8 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 api_key = os.getenv("OPENROUTER_API_KEY")
-print("API KEY:", api_key)
-
 
 def ask_llm(prompt):
     headers = {
