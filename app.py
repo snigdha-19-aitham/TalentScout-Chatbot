@@ -314,7 +314,7 @@ elif st.session_state.step == 'end':
               st.session_state.completed = True
         elif st.session_state.q_index >= len(st.session_state.base_questions) + len(st.session_state.followup_questions):
               # No more questions available
-              st.session_state.completed = True
+            st.session_state.completed = True
    
         if feedback:
             st.info("💡 " + " ".join(feedback))
