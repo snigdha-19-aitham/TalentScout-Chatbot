@@ -1,9 +1,12 @@
 import os
 import requests
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
-api_key = os.getenv("OPENROUTER_API_KEY")
+
+# Use Streamlit secrets first, fallback to .env
+api_key = st.secrets.get("OPENROUTER_API_KEY") or os.getenv("OPENROUTER_API_KEY")
 
 def ask_llm(prompt):
     headers = {
@@ -11,7 +14,7 @@ def ask_llm(prompt):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "meta-llama/llama-3-8b-instruct", # fast + good
+        "model": "meta-llama/llama-3-8b-instruct",
         "messages": [{"role": "user", "content": prompt}],
     }
 
