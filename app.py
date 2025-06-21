@@ -1,21 +1,3 @@
-"""
-TalentScout Chatbot 🎯
-
-A Streamlit-based AI-powered virtual hiring assistant that:
-- Collects candidate information
-- Analyzes tech stack
-- Dynamically generates technical questions using LLM
-- Accepts candidate responses
-- Provides sentiment feedback
-- Generates follow-up questions to dig deeper
-
-Modules:
-- prompts.py: Contains prompt templates for the LLM
-- model_interface.py: Interface to connect and send prompts to the LLM
-
-Author: Snigdha Aitham
-"""
-
 import streamlit as st
 from prompts import *
 from model_interface import ask_llm
@@ -53,11 +35,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 def init_session():
-    """
-    Initialize Streamlit session state variables for managing app state and data.
-    """
     defaults = {
         'step': 'start',
         'user_data': {},
@@ -70,27 +48,11 @@ def init_session():
         if key not in st.session_state:
             st.session_state[key] = value
 
-
 def reset_session():
-    """
-    Reset relevant session state keys to start a fresh interview.
-    """
     for key in ['questions', 'answers', 'q_index', 'user_data', 'step', 'sentiments']:
         st.session_state.pop(key, None)
 
-
 def generate_followup(original_question: str, answer: str, tech_stack: str) -> str:
-    """
-    Generate a follow-up question based on the candidate's previous answer.
-
-    Parameters:
-        original_question (str): The initial technical question asked.
-        answer (str): The candidate’s response.
-        tech_stack (str): The declared tech stack for context.
-
-    Returns:
-        str: A follow-up question or an empty string if none needed.
-    """
     if not answer.strip() or len(answer.split()) < 3:
         return "Would you mind elaborating a little more on your answer?"
 
@@ -116,8 +78,7 @@ If the response is already strong and needs no follow-up, reply with an EMPTY st
     except Exception:
         return None
 
-
-# 🚦 Initialize state
+# 🚦 Initialize session
 init_session()
 
 # 🏩 App Header
@@ -173,16 +134,31 @@ elif st.session_state.step == 'generate_questions':
             try:
                 prompt = question_generation_prompt(st.session_state.user_data['tech_stack'])
                 response = ask_llm(prompt)
-                questions = [q.strip("-• ") for q in response.split('\n') if q.strip() and len(q.strip()) > 8]
-                st.session_state.questions = questions or ["Tell me about a recent project you've worked on."]
+
+                # Extract only actual questions (exclude headings or intros)
+                lines = response.split('\n')
+                questions = []
+
+                for line in lines:
+                    line = line.strip()
+                    if not line or "question" in line.lower():
+                        continue
+                    if "?" in line:
+                        clean = line.lstrip("-•0123456789. ").strip()
+                        questions.append(clean)
+
+                if not questions:
+                    questions = ["Tell me about a recent project you've worked on."]
+
+                st.session_state.questions = questions
                 st.session_state.answers = []
                 st.session_state.q_index = 0
+
             except Exception:
                 st.error("⚠️ We encountered an issue preparing your questions. Please try again.")
                 if st.button("🔁 Retry"):
                     st.rerun()
 
-    # Ask question
     if st.session_state.q_index < len(st.session_state.questions) and len(st.session_state.answers) < MAX_QUESTIONS:
         q = st.session_state.questions[st.session_state.q_index]
         st.markdown(f"**Question {len(st.session_state.answers) + 1}:** {q}")
@@ -214,7 +190,6 @@ elif st.session_state.step == 'end':
     st.markdown("## 🎉 Interview Complete!")
     st.success(f"Thank you for your time, {name}! 🙌")
 
-    # Sentiment feedback
     avg_sentiment = sum(st.session_state.sentiments) / len(st.session_state.sentiments) if st.session_state.sentiments else 0
     if avg_sentiment > 0.3:
         st.info("You seemed confident and positive! Great job! 🚀")
@@ -223,7 +198,6 @@ elif st.session_state.step == 'end':
     else:
         st.caption("Your tone was quite neutral throughout. Thank you for being thoughtful in your responses.")
 
-    # Follow-up instructions
     st.markdown(f"""
 ### 📒 What's Next:
 Our recruitment team will carefully review your responses and match your profile with relevant opportunities.  
